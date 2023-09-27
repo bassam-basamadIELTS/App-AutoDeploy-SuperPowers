@@ -219,11 +219,6 @@ jobs:
       - attach_workspace:
           at: ~/
       - run:
-          name: Install dependencies
-          command: |
-            # Your code here
-            exit 1
-      - run:
           name: Configure server
           command: |
             cd .circleci/ansible
@@ -374,6 +369,7 @@ workflows:
             - scan-backend
             - scan-frontend
             - deploy-infrastructure
+            - configure-infrastructure
       - deploy-infrastructure:
           requires: [test-frontend, test-backend, scan-frontend, scan-backend]
           filters:
