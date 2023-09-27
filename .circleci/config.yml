@@ -4,14 +4,6 @@ orbs:
   slack: circleci/slack@4.12.5
 
 commands:
-  install_ncessary_packages:
-    steps:
-    - run:
-          name: Installing necessary packages
-          command: |
-            sudo apt update
-            sudo apt install -y tar gzip curl software-properties-common
-  
   install_awscli:
     description: install aws cli v2
     steps:
@@ -26,7 +18,7 @@ commands:
     description: install ansible
     steps:
       - run:
-          name: install install_ansible
+          name: install ansible v2
           command: |
             sudo apt update
             sudo apt install software-properties-common
@@ -179,7 +171,6 @@ jobs:
       - image: cimg/base:stable
     steps:
       - checkout
-      - install_ncessary_packages
       - install_awscli
       - run:
           name: Ensure back-end infrastructure exists
