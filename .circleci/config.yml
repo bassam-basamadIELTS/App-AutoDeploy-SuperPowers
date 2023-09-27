@@ -18,7 +18,7 @@ commands:
     description: install ansible
     steps:
       - run:
-          name: install ansible
+          name: install install_ansible
           command: |
             sudo apt update
             sudo apt install software-properties-common
@@ -192,7 +192,7 @@ jobs:
           command: |
             BACKEND_PUBLIC_IP=$(aws ec2 describe-instances \
               --filters "Name=tag:Name, Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --query 'Reservations[*].Instances[*].PublicAddress' \
+              --query 'Reservations[*].Instances[*].[PublicIpAddress]' \
               --output text)
             echo $BACKEND_PUBLIC_IP >> .circleci/ansible/inventory.txt
             cat .circleci/ansible/inventory.txt
