@@ -4,6 +4,15 @@ orbs:
   slack: circleci/slack@4.12.5
 
 commands:
+  install_tar_zip:
+    description: install some dependencies
+    steps:
+      - run:
+          name: Installing necessary packages
+          command: |
+            sudo apt update
+            sudo apt install -y tar gzip curl software-properties-common
+  
   install_awscli:
     description: install aws cli v2
     steps:
@@ -189,6 +198,7 @@ jobs:
       - image: cimg/base:stable
     steps:
       - checkout
+      - install_tar_zip
       - install_awscli
       - run:
           name: Ensure back-end infrastructure exists
@@ -229,6 +239,7 @@ jobs:
       - image: cimg/base:stable
     steps:
       - checkout
+      - install_tar_zip
       - install_awscli
       - install_ansible   
       - add_ssh_keys:
@@ -281,6 +292,7 @@ jobs:
       - image: cimg/base:stable
     steps:
       - checkout
+      - install_tar_zip
       - install_awscli
       - install_nodejs
       - restore_cache:
@@ -318,6 +330,7 @@ jobs:
       - image: cimg/base:stable
     steps:
       - checkout
+      - install_tar_zip
       - install_awscli
       - install_ansible
       - install_nodejs
