@@ -67,7 +67,7 @@ commands:
             fi
 
   install_nodejs_13:
-    desription: Instal  Nodejs 13
+    description: Instal  Nodejs 13
     steps:
       - run:
           name: Install Nodejs 13
@@ -297,7 +297,9 @@ jobs:
             cd frontend
             npm run build
             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
-      - destroy-enviornment
+
+      - destroy-environment:
+          Workflow_ID: '${CIRCLE_WORKFLOW_ID:0:7}'
       - revert-migrations
       - notify_on_failure     
                     
@@ -339,7 +341,9 @@ jobs:
             cd .circleci/ansible
             cat inventory.txt
             ansible-playbook -i inventory.txt deploy-backend.yml
-      - destroy-enviornment
+            
+      - destroy-environment:
+          Workflow_ID: '${CIRCLE_WORKFLOW_ID:0:7}'
       - revert-migrations
       # Here's where you will add some code to rollback on failure  
 
