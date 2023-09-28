@@ -3,7 +3,15 @@
     file:
       path: ~/backend-app
       state: directory
+
+  - name: Copy files
+    become: true
+    copy:
+      src: /root/project/artifact.tar.gz
+      dest: /home/ubuntu/artifact.tar.gz
+
   - name: "Unarchive backend files"
+    become: true
     unarchive:
       src: artifact.tar.gz
       dest: ~/backend-app
