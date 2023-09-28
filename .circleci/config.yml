@@ -252,8 +252,7 @@ jobs:
             else
               curl https://kvdb.io/${KVDB_BUCKET}/migration_${CIRCLE_WORKFLOW_ID:0:7} -d '0'
             fi 
-      - destroy-environment:
-          workflow_id:  ${CIRCLE_WORKFLOW_ID:0:7}
+      - destroy-environment
       - revert-migrations: 
           workflow_id:  ${CIRCLE_WORKFLOW_ID:0:7}  
 
