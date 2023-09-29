@@ -350,23 +350,24 @@ jobs:
                     
   deploy-backend:
     docker:
-      - image: python:3.7-alpine3.11
+      - image: cimg/base:stable
     steps:
       - checkout
-     # - install_tar_zip
-      - install_awscli_alpine311
-    #  - install_ansible
-     # - install_nodejs
+      - install_tar_zip
+      # - install_awscli_alpine311
+      - install_awscli
+      - install_ansible
+      - install_nodejs13_18_0
       - add_ssh_keys:
           fingerprints: ["74:26:4e:8f:1d:56:b1:dd:8f:fd:22:37:f2:70:cf:3a"]
       - attach_workspace:
           at: ~/
       - restore_cache:
           keys: [backend-deps]
-      - run:
-          name: Install dependencies
-          command: |
-            apk add --update ansible nodejs npm tar gzip
+      # - run:
+      #     name: Install dependencies
+      #     command: |
+      #       apk add --update ansible nodejs npm tar gzip
       # - run:
       #     name: Package Backend
       #     command: |
