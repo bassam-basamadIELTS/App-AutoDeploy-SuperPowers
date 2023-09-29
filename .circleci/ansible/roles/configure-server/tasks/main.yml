@@ -23,17 +23,9 @@
 - name: "Install Nodejs"
   become: true
   apt:
-    name: ["nodejs", "npm"]
+    name: ["nodejs"]
     state: latest
     update_cache: yes
-
-- name: "install n"
-  become: true
-  npm:
-    name: n
-    global: yes
-    production: yes
-  
 
 - name: "install PM2 Globally"
   npm: 
