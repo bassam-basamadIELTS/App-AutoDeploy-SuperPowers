@@ -350,7 +350,7 @@ jobs:
             npm install
             npm run build
             cd ..
-            tar -czf artifact.tar.gz dist/* package*
+            tar -czvf artifact.tar.gz dist/* package*
             cat ~/project/.circleci/ansible/inventory.txt
             cd ..
             cp backend/artifact.tar.gz .circleci/ansible/roles/deploy/files
@@ -360,7 +360,7 @@ jobs:
             export TYPEORM_MIGRATIONS_DIR=./migrations
             export TYPEORM_ENTITIES=./modules/domain/**/*.entity{.ts,.js}
             export TYPEORM_MIGRATIONS=./migrations/*{.ts,.js}
-            
+
             cd .circleci/ansible
             echo "Contents  of the inventory.txt file is -------"
             cat inventory.txt
