@@ -89,21 +89,7 @@ commands:
               npm run migrations:revert
             fi
 
-  # install_nodejs:
-  #   description: Instal  Nodejs 
-  #   steps:
-  #     - run:
-  #         name: Install Nodejs 
-  #         command: |
-  #           sudo apt-get update
-  #           sudo apt-get install -y ca-certificates curl gnupg
-  #           sudo mkdir -p /etc/apt/keyrings
-  #           curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
-  #           NODE_MAJOR=16
-  #           echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
-  #           sudo apt-get update
-  #           sudo apt-get install nodejs -y
-
+  
   install_nodejs_latest:
     description: install nodejs latest
     steps:
@@ -384,16 +370,7 @@ jobs:
             mkdir -p ~/project/.circleci/ansible/roles/deploy/files/
             
             cp artifact.tar.gz .circleci/ansible/roles/deploy/files/
-      # - run:
-      #     name: Deploy backend
-      #     command: |
-      #       cd backend
-      #       npm install
-      #       npm run build
-      #       cd ..
-      #       tar -C backend -czvf artifact.tar.gz .
-      #       cat ~/project/.circleci/ansible/inventory.txt
-      #       ansible-playbook -i ~/project/.circleci/ansible/inventory.txt ~/project/.circleci/ansible/deploy-backend.yml
+
       - run:
           name: Deploy Backend
           command: |
@@ -411,28 +388,44 @@ jobs:
       - revert-migrations
       # Here's where you will add some code to rollback on failure  
 
-#   smoke-test:
-#     docker:
-#       # Lightweight Docker image 
-#     steps:
-#       # Checkout code from git
-#       - run:
-#           name: Install dependencies
-#           command: |
-#             # your code here
-#       - run:
-#           name: Get backend url
-#           command: |
-#             # your code here
-#       - run:
-#           name: Backend smoke test.
-#           command: |
-#             # your code here
-#       - run:
-#           name: Frontend smoke test.
-#           command: |
-#             # your code here
-#       # Here's where you will add some code to rollback on failure  
+  smoke-test:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - checkout
+      - install_awscli
+      - install_nodejs_latest
+      - run:
+          name: backend smoke test
+          command: |
+            BACKEND_PUBLIC_IP=$(aws ec2 describe-instances \
+              --filters "Name=tag:Name, Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --query 'Reservations[*].Instances[*].[PublicIpAddress]' \
+              --output text)
+            # Generate the API URL
+            export API_URL=http://${BACKEND_PUBLIC_IP}:3030
+            # Performing a get request with curl and checking for "ok" in the response
+            if curl -s $API_URL/api/status | grep "ok"
+            then
+                exit 0
+            else
+                exit 1
+            fi
+      - run:
+          name: Frontend smoke test.
+          command: |
+            FRONTEND_WEBSITE=http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website.${AWS_DEFAULT_REGION}.amazonaws.com
+            if curl -s $FRONTEND_WEBSITE | grep "Welcome"
+            then
+                exit 1
+            else
+                exit 2
+            fi
+
+      - destroy-environment:
+          Workflow_ID: '${CIRCLE_WORKFLOW_ID:0:7}'
+      - revert-migrations
+      # Here's where you will add some code to rollback on failure  
 
 #   cloudfront-update:
 #     docker:
@@ -515,8 +508,8 @@ workflows:
           requires: [run-migrations]
       - deploy-backend:
           requires: [run-migrations]
-      # - smoke-test:
-      #     requires: [deploy-backend, deploy-frontend]
+      - smoke-test:
+          requires: [deploy-backend, deploy-frontend]
       # - cloudfront-update:
       #     requires: [smoke-test]
       # - cleanup:
