@@ -71,22 +71,24 @@ commands:
             aws cloudformation delete-stack --stack-name udapeople-frontend-<< parameters.Workflow_ID >>
 
   revert-migrations:
-    description: Revert the last migration if successfully run in the current workflow.
+    description: Revert the last migration, if any were executed during the current workflow
     parameters:
-      workflow_id:
-        type: string   
+      Workflow_ID:
+        type: string
         default: ${CIRCLE_WORKFLOW_ID:0:7}
     steps:
       - run:
           name: Revert migrations
           when: on_fail
           command: |
-            SUCCESS=$(curl --insecure https://kvdb.io/${KVDB_BUCKET}/migration_<<parameters.workflow_id>>)
-            echo success: $SUCCESS
-            if (($SUCCESS == 1)); then
-              cd backend
+            SUCCESS=$(curl --insecure  https://kvdb.io/${KVDB_BUCKET}/migration_<< parameters.Workflow_ID >>)
+
+            # Logic for reverting the database state
+            if (( $SUCCESS == 1 ));
+            then
+              cd ~/project/backend
               npm install
-              npm run migrations:revert
+              npm run migration:revert
             fi
 
   
@@ -269,26 +271,28 @@ jobs:
 
   run-migrations:
     docker:
-      - image : cimg/node:13.8.0
+      - image : cimg/python:3.10
     steps:
       - checkout
       - install_awscli
+      - install_nodejs_latest
+      - restore_cache:
+          keys: [backend-deps]
       - run:
           name: Run migrations
           command: |
             cd backend
             npm install
-            npm run build
             npm run migrations > migrations_dump.txt 
             cat migrations_dump.txt
-            readlink -f migrations_dump.txt
       - run:
           name: Send migration results to kvdb.io
           command: |
-            if grep -q "No migrations are pending" /home/circleci/project/backend/migrations_dump.txt   
+            if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt   
             then
               curl https://kvdb.io/${KVDB_BUCKET}/migration_${CIRCLE_WORKFLOW_ID:0:7} -d '1'
             else
+              echo "No migrations are pending" 
               curl https://kvdb.io/${KVDB_BUCKET}/migration_${CIRCLE_WORKFLOW_ID:0:7} -d '0'
             fi 
       - destroy-environment
@@ -454,24 +458,30 @@ jobs:
           Workflow_ID: '${CIRCLE_WORKFLOW_ID:0:7}'
       - revert-migrations
 
-# cleanup:
-#     docker:
-#       # Docker image here
-#     steps:
-#       # Checkout code from git
-#       - run:
-#           name: Get old stack workflow id
-#           command: |
-#             # your code here
-#             export OldWorkflowID="the id here"
-#             export STACKS=[] #put the list of stacks here
-#       - run:
-#           name: Remove old stacks and files
-#           command: |
-#             if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
-#             then
-#               # your code here
-#             fi
+  cleanup:
+      docker:
+        - image: cimg/base:stable
+      steps:
+        - checkout
+        - install_awscli
+        - install_nodejs_latest
+        - run:
+            name: Remove old stacks and files
+            command: |
+              export STACKS=($(aws cloudformation list-stacks \
+                  --query "StackSummaries[*].StackName" \
+                  --stack-status-filter CREATE_COMPLETE --no-paginate --output text))
+              echo Stack names: "${STACKS[@]}"
+
+              export OldWorkflowID=$(curl --insecure https://kvdb.io/${KVDB_BUCKET}/old_workflow_id)
+              echo Old Workflow ID: $OldWorkflowID
+
+              if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
+              then
+                aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
+                aws cloudformation delete-stack --stack-name "udapeople-backend-${OldWorkflowID}"
+                aws cloudformation delete-stack --stack-name "udapeople-frontend-${OldWorkflowID}"
+              fi
             
   notify_on_success:
     docker:
@@ -526,5 +536,5 @@ workflows:
           requires: [deploy-backend, deploy-frontend]
       - cloudfront-update:
           requires: [smoke-test]
-      # - cleanup:
-      #     requires: [cloudfront-update]
+      - cleanup:
+          requires: [cloudfront-update]
