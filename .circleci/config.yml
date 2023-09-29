@@ -89,20 +89,20 @@ commands:
               npm run migrations:revert
             fi
 
-  install_nodejs:
-    description: Instal  Nodejs 
-    steps:
-      - run:
-          name: Install Nodejs 
-          command: |
-            sudo apt-get update
-            sudo apt-get install -y ca-certificates curl gnupg
-            sudo mkdir -p /etc/apt/keyrings
-            curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
-            NODE_MAJOR=16
-            echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
-            sudo apt-get update
-            sudo apt-get install nodejs -y
+  # install_nodejs:
+  #   description: Instal  Nodejs 
+  #   steps:
+  #     - run:
+  #         name: Install Nodejs 
+  #         command: |
+  #           sudo apt-get update
+  #           sudo apt-get install -y ca-certificates curl gnupg
+  #           sudo mkdir -p /etc/apt/keyrings
+  #           curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+  #           NODE_MAJOR=16
+  #           echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
+  #           sudo apt-get update
+  #           sudo apt-get install nodejs -y
 
   install_nodejs_latest:
     description: install nodejs latest
@@ -367,41 +367,43 @@ jobs:
           at: ~/
       - restore_cache:
           keys: [backend-deps]
+      - run:
+          name: Install dependencies
+          command: |
+            cd backend
+            npm install
+      - run:
+          name: Package Backend
+          command: |
+            cd backend
+            npm run build
+
+            tar -czf artifact.tar.gz dist/* packages*
+            mkdir -p ~/project/.circleci/ansible/roles/deploy/files/
+            
+            cd ..
+            cp backend/artifact.tar.gz .circleci/ansible/roles/deploy/files/
       # - run:
-      #     name: Install dependencies
-      #     command: |
-      #       apk add --update ansible nodejs npm tar gzip
-      # - run:
-      #     name: Package Backend
+      #     name: Deploy backend
       #     command: |
       #       cd backend
       #       npm install
       #       npm run build
       #       cd ..
       #       tar -C backend -czvf artifact.tar.gz .
-      #       mkdir -p ~/project/.circleci/ansible/roles/deploy/files/
-      #       mv artifact.tar.gz .circleci/ansible/roles/deploy/files/artifact.tar.gz
+      #       cat ~/project/.circleci/ansible/inventory.txt
+      #       ansible-playbook -i ~/project/.circleci/ansible/inventory.txt ~/project/.circleci/ansible/deploy-backend.yml
       - run:
-          name: Deploy backend
+          name: Deploy Backend
           command: |
-            cd backend
-            npm install
-            npm run build
-            cd ..
-            tar -C backend -czvf artifact.tar.gz .
-            cat ~/project/.circleci/ansible/inventory.txt
-            ansible-playbook -i ~/project/.circleci/ansible/inventory.txt ~/project/.circleci/ansible/deploy-backend.yml
-      # - run:
-      #     name: Deploy Backend
-      #     command: |
-      #       export TYPEORM_MIGRATIONS_DIR=./migrations
-      #       export TYPEORM_ENTITIES=./modules/domain/**/*.entity{.ts,.js}
-      #       export TYPEORM_MIGRATIONS=./migrations/*{.ts,.js}
+            export TYPEORM_MIGRATIONS_DIR=./migrations
+            export TYPEORM_ENTITIES=./modules/domain/**/*.entity{.ts,.js}
+            export TYPEORM_MIGRATIONS=./migrations/*{.ts,.js}
 
-      #       cd .circleci/ansible
-      #       echo "Contents  of the inventory.txt file is -------"
-      #       cat inventory.txt
-      #       ansible-playbook -i inventory.txt deploy-backend.yml
+            cd .circleci/ansible
+            echo "Contents  of the inventory.txt file is -------"
+            cat inventory.txt
+            ansible-playbook -i inventory.txt deploy-backend.yml
 
       - destroy-environment:
           Workflow_ID: '${CIRCLE_WORKFLOW_ID:0:7}'
