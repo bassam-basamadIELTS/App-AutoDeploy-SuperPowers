@@ -104,14 +104,17 @@ commands:
             sudo apt-get update
             sudo apt-get install nodejs -y
 
-  install_nodejs13_18_0:
-    description: install nodejs 13.8.0
+  install_nodejs_latest:
+    description: install nodejs latest
     steps:
       - run:
-          name: install nodej13.8.0
+          name: install nodejlatest
           command: |
-            curl -fsSL https://deb.nodesource.com/setup_13.x | sudo -E bash -
+            curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
             sudo apt-get install -y nodejs
+
+            sudo npm install --global n
+            sudo n 13.8.0
 jobs:
   build-frontend:
     docker:
@@ -315,7 +318,7 @@ jobs:
       - install_tar_zip
       - install_awscli
       - install_ansible
-      - install_nodejs
+      - install_nodejs_latest
       - restore_cache:
          keys: [frontend-deps]
       - run:
@@ -357,7 +360,7 @@ jobs:
       # - install_awscli_alpine311
       - install_awscli
       - install_ansible
-      - install_nodejs13_18_0
+      - install_nodejs_latest
       - add_ssh_keys:
           fingerprints: ["74:26:4e:8f:1d:56:b1:dd:8f:fd:22:37:f2:70:cf:3a"]
       - attach_workspace:
