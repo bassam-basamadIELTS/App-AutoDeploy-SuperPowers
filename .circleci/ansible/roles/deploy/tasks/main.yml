@@ -1,4 +1,13 @@
 ---
+  - name: display the files locations
+    become: true
+    shell : |
+        echo *
+        PWD
+        cd backend
+        echo *
+        PWD
+        
   - name: Copy files
     become: true
     copy:
