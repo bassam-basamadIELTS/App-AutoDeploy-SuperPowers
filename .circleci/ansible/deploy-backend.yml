@@ -2,7 +2,6 @@
 
 - name: "deployment play." 
   hosts: web
-  user: ubuntu
   remote_user: ubuntu
   become: true
   become_method: sudo
@@ -38,6 +37,6 @@
       changed_when: false
 
     - setup:
-    
+
   roles:
     - deploy
