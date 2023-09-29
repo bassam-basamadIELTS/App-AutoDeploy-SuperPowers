@@ -19,12 +19,13 @@ commands:
       - run:
           name: install aws li
           command: |
-            sudo apk update
-            sudo apk upgrade 
-            sudo apk add python3 py3-pip 
-            python3 --version 
-            pip3 --version 
-            pip3 install awscli --upgrade --user 
+            apk add --no-cache \
+            python3 \
+            py3-pip \
+            && pip3 install --upgrade pip \
+            && pip3 install --no-cache-dir \
+            awscli \
+            && rm -rf /var/cache/apk/* 
 
   install_awscli:
     description: install aws cli v2
