@@ -1,5 +1,5 @@
 URL1: https://github.com/bassam-basamadIELTS/App-AutoDeploy-SuperPowers
-URL2: http://udapeople-1f2ee87.s3-website-us-east-1.amazonaws.com
-URL3: http://d1sgzr2h7dleog.cloudfront.net
+URL2: http://udapeople-0e99965.s3-website-us-east-1.amazonaws.com/
+URL3: http://d1sgzr2h7dleog.cloudfront.net/#/employees
 URL4: http://ec2-44-202-117-7.compute-1.amazonaws.com:3030
-URL5: http://ec2-44-202-113-189.compute-1.amazonaws.com:9090/
+URL5: http://ec2-54-205-90-67.compute-1.amazonaws.com:9090/
