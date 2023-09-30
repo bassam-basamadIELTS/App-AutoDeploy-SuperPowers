@@ -271,17 +271,18 @@ jobs:
 
   run-migrations:
     docker:
-      - image : cimg/python:3.10.12-node
+      - image : cimg/python:3.10.12
     steps:
       - checkout
       - install_awscli
-      # - install_nodejs_latest
+      - install_nodejs_latest
       - restore_cache:
           keys: [backend-deps]
       - run:
           name: Run migrations
           command: |
             cd backend
+            npm run build
             npm install
             npm run migrations > migrations_dump.txt 
             cat migrations_dump.txt
