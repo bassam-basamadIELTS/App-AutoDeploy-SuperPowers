@@ -281,7 +281,6 @@ jobs:
           name: Run migrations
           command: |
             cd backend
-            rm -rf node_modules package-lock.json
             npm install
             npm audit fix
             npm run migrations > migrations_dump.txt 
