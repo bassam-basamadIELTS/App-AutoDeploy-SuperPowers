@@ -271,11 +271,10 @@ jobs:
 
   run-migrations:
     docker:
-      - image : cimg/base:stable
+      - image : circleci/node:13.8.0
     steps:
       - checkout
       - install_awscli
-      - install_nodejs_latest
       - restore_cache:
           keys: [backend-deps]
       - run:
@@ -288,11 +287,12 @@ jobs:
       - run:
           name: Send migration results to kvdb.io
           command: |
-            if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt   
+            if grep -q -e "has been executed successfully" -e "migrations are pending" ~/project/backend/migrations_dump.txt   
             then
+              echo "DB migration was successful, will update kvdb"
               curl https://kvdb.io/${KVDB_BUCKET}/migration_${CIRCLE_WORKFLOW_ID:0:7} -d '1'
             else
-              echo "No migrations are pending" 
+              echo "DB migration failed, please verify setup! Probably the database already exists. Verify setup!" 
               curl https://kvdb.io/${KVDB_BUCKET}/migration_${CIRCLE_WORKFLOW_ID:0:7} -d '0'
             fi 
       - destroy-environment
